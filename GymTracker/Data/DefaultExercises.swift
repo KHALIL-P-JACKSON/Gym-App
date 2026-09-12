@@ -72,6 +72,7 @@ enum DefaultExercises {
         ExerciseSeed(name: "Seated Cable Row", muscleGroup: .back, category: .pull),
         ExerciseSeed(name: "Single Arm Seated Cable Row", muscleGroup: .back, category: .pull),
         ExerciseSeed(name: "Barbell Row", muscleGroup: .back, category: .pull),
+        ExerciseSeed(name: "Rear Delt Flys", muscleGroup: .back, category: .pull),
         // Shoulders
         ExerciseSeed(name: "Shoulder Press", muscleGroup: .shoulders, category: .push),
         ExerciseSeed(name: "Lateral Raise", muscleGroup: .shoulders, category: .push),
