@@ -41,20 +41,23 @@ Each exercise card also shows your **last recorded sets** for that exercise (`La
 | **Plan** | Preset workout splits (Push / Pull / Legs, Upper, Full Body, Calisthenics) that load all exercises into the Workout tab at once. Create custom plans (name + multi-select), edit any plan's name/exercises (pencil), delete custom plans (trash). |
 | **History** | Completed workouts, newest first. A **+** button lets you log a workout for any day (including past days you did before the app was installed). Tap a workout for full details; pencil edits name/date/notes/sets (add/remove sets + exercises), trash deletes it (and its sets). |
 | **Progress** | Pick any exercise to see current best, change vs previous workout-best, estimated 1RM, and a Swift Charts line chart of estimated 1RM over time. |
+| **Settings** | Weight unit (lb/kg, stored values stay in lb), theme (system/light/dark), default rest timer, keep-awake during workout, discard-confirmation toggle, CSV export, delete-all-data, version/about. |
 
 ## Architecture
 
 ```
 GymTracker/
-├── App/            GymTrackerApp (SwiftData container + seeding), Theme (design system)
+├── App/            GymTrackerApp (SwiftData container + seeding), Theme (design system),
+│                   AppSettings (units/appearance/rest/keep-awake/confirm prefs)
 ├── Models/         Exercise, Workout, WorkoutSet, WorkoutPlan (SwiftData @Model)
 ├── Data/           DefaultExercises (preset library + seeder), DefaultPlans (preset splits),
 │                   PreviewData (previews only)
 ├── Services/       WorkoutService (saving / previous performance),
 │                   ProgressCalculator (best lifts, estimated 1RM, streaks, history),
 │                   WorkoutSession (in-memory draft of the workout being logged),
-│                   PlanStore (preset/custom plan persistence)
-├── Views/          MainTabView, Home/, Workout/, Plan/, History/, Progress/
+│                   PlanStore (preset/custom plan persistence),
+│                   DataManager (CSV export + delete-all)
+├── Views/          MainTabView, Home/, Workout/, Plan/, History/, Progress/, Settings/
 ├── Components/     StatCard, SetRow, EmptyStateView, ExerciseGroupList
 └── Utilities/      AppFormatters (shared date/number formatting)
 ```
@@ -81,6 +84,8 @@ Uses the **Epley formula**: `weight × (1 + reps / 30)`. It is always labeled as
 - [ ] Plan tab shows 6 preset splits; tapping "Add to Workout" loads all exercises into the Workout tab and jumps there.
 - [ ] Plan tab → Create Custom Plan → name + pick exercises → Save → appears under My Plans; trash deletes it.
 - [ ] Plan tab → pencil on any plan (preset or custom) → rename + change exercises → Save → card updates; relaunch keeps edits.
+- [ ] Settings → switch to kg → Workout entry, Last Workout, History, Progress and volume all show kg; switch back shows lb with same stored values.
+- [ ] Settings → Theme light/dark applies immediately; Export CSV shares a file; Delete All Data wipes workouts/plans/customs and re-seeds presets.
 - [ ] History → tap workout → pencil → rename, change date/notes, edit weight/reps, add/remove sets, add exercise → Save → detail + list update.
 - [ ] Workout → Custom button → name + muscle group → exercise appears in the picker (under its group) and is added to the session.
 - [ ] Log a workout: Bench Press → 185 → 8 → Complete locks the card → Edit unlocks → Add Set unlocks and appends a row.

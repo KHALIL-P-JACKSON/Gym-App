@@ -86,18 +86,29 @@ final class DraftExercise {
 
 /// A partially entered set. Weight and reps are kept as text so the user
 /// can type freely; they are parsed and validated when the workout saves.
+///
+/// `weightText` is always in `entryUnit`; `weight` converts back to
+/// stored pounds.
 @Observable
 final class DraftSet: Identifiable {
     let id = UUID()
     var weightText: String
     var repsText: String
+    /// Unit the weight text was entered in (snapshot of the setting when
+    /// the row was created).
+    var entryUnit: WeightUnit
 
-    init(weightText: String = "", repsText: String = "") {
+    init(weightText: String = "", repsText: String = "", entryUnit: WeightUnit = AppSettings.weightUnit) {
         self.weightText = weightText
         self.repsText = repsText
+        self.entryUnit = entryUnit
     }
 
-    var weight: Double? { Double(weightText) }
+    /// Parsed weight converted to stored pounds.
+    var weight: Double? {
+        guard let value = Double(weightText) else { return nil }
+        return entryUnit.toPounds(value)
+    }
     var reps: Int? { Int(repsText) }
 
     var isValid: Bool {

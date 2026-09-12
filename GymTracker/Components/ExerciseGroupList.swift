@@ -25,7 +25,7 @@ struct ExerciseGroupList: View {
                                 .frame(width: 26, height: 26)
                                 .background(Circle().fill(Theme.fieldBackground))
                             Spacer()
-                            Text("\(AppFormatters.weight(set.weight)) lb × \(set.reps)")
+                            Text("\(AppFormatters.weightWithUnit(set.weight)) × \(set.reps)")
                                 .font(.subheadline.weight(.medium))
                                 .monospacedDigit()
                         }

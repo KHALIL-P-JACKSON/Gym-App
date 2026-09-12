@@ -29,17 +29,24 @@ enum AppFormatters {
     }
 
     /// A weight such as 185 or 182.5 → "185" / "182.5".
-    static func weight(_ value: Double) -> String {
-        if value == value.rounded() {
-            return String(Int(value))
+    static func weight(_ pounds: Double, unit: WeightUnit = AppSettings.weightUnit) -> String {
+        let display = unit.fromPounds(pounds)
+        if display == display.rounded() {
+            return String(Int(display))
         }
-        return decimalFormatter.string(from: NSNumber(value: value)) ?? String(value)
+        return decimalFormatter.string(from: NSNumber(value: display)) ?? String(display)
     }
 
-    /// Total volume, e.g. "4,850 lb".
-    static func volume(_ value: Double) -> String {
-        let formatted = decimalFormatter.string(from: NSNumber(value: value)) ?? "0"
-        return "\(formatted) lb"
+    /// Total volume, e.g. "4,850 lb" / "2,200 kg".
+    static func volume(_ pounds: Double, unit: WeightUnit = AppSettings.weightUnit) -> String {
+        let display = unit.fromPounds(pounds)
+        let formatted = decimalFormatter.string(from: NSNumber(value: display)) ?? "0"
+        return "\(formatted) \(unit.abbreviation)"
+    }
+
+    /// Weight + unit suffix, e.g. "185 lb × 8".
+    static func weightWithUnit(_ pounds: Double, unit: WeightUnit = AppSettings.weightUnit) -> String {
+        "\(weight(pounds, unit: unit)) \(unit.abbreviation)"
     }
 
     /// Time-of-day greeting for the Home screen.

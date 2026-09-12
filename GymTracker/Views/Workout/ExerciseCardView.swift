@@ -85,6 +85,7 @@ struct ExerciseCardView: View {
     }
 
     /// Summary of the user's most recent session with this exercise.
+    /// Previous weights are stored in pounds and converted for display.
     private var lastWorkoutStrip: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
@@ -102,7 +103,7 @@ struct ExerciseCardView: View {
                     Text("Set \(set.setNumber)")
                         .foregroundStyle(Theme.secondaryText)
                     Spacer()
-                    Text("\(AppFormatters.weight(set.weight)) lb × \(set.reps)")
+                    Text("\(AppFormatters.weightWithUnit(set.weight)) × \(set.reps)")
                         .monospacedDigit()
                 }
                 .font(.subheadline)
@@ -119,7 +120,7 @@ struct ExerciseCardView: View {
         HStack(spacing: 8) {
             Text("Set")
                 .frame(width: 24, alignment: .leading)
-            Text("Weight (lb)")
+            Text("Weight (\(AppSettings.weightUnit.abbreviation))")
                 .frame(maxWidth: .infinity)
             Text("Reps")
                 .frame(maxWidth: .infinity)
@@ -130,6 +131,8 @@ struct ExerciseCardView: View {
         .foregroundStyle(Theme.secondaryText)
     }
 
+    /// Locked rows show the entered value in its entry unit (so what the
+    /// user sees matches what they typed, even in kg mode).
     private func lockedSetRow(set: DraftSet, setNumber: Int) -> some View {
         HStack(spacing: 8) {
             Text("\(setNumber)")
@@ -137,7 +140,7 @@ struct ExerciseCardView: View {
                 .foregroundStyle(Theme.secondaryText)
                 .frame(width: 24, height: 24)
                 .background(Circle().fill(Theme.fieldBackground))
-            Text(AppFormatters.weight(set.weight ?? 0))
+            Text(AppFormatters.weight(set.weight ?? 0, unit: set.entryUnit))
                 .frame(maxWidth: .infinity)
                 .font(.title3.weight(.medium).monospacedDigit())
                 .padding(.vertical, 8)

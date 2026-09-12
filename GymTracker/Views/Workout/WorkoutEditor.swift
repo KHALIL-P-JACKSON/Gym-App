@@ -52,6 +52,10 @@ private struct WorkoutEditorContent: View {
     /// Single source of truth for which field has the keyboard open.
     /// Lives here so the keyboard toolbar ("Done") only exists once.
     @FocusState private var focusedField: SetField?
+    // Keep-awake is a live AppStorage read so toggling it in Settings
+    // applies to the open workout screen immediately.
+    @AppStorage("settings.keepAwakeDuringWorkout") private var keepAwake = false
+    @AppStorage("settings.confirmBeforeDiscarding") private var confirmDiscard = true
 
     var body: some View {
         ScrollView {
@@ -101,6 +105,11 @@ private struct WorkoutEditorContent: View {
             }
         }
         .safeAreaInset(edge: .bottom) { summaryBar }
+        .onAppear { UIApplication.shared.isIdleTimerDisabled = keepAwake }
+        .onChange(of: keepAwake) { _, newValue in
+            UIApplication.shared.isIdleTimerDisabled = newValue
+        }
+        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
         .fullScreenCover(item: $completedWorkout) { workout in
             WorkoutCompleteView(workout: workout) {
                 completedWorkout = nil
@@ -214,7 +223,7 @@ private struct WorkoutEditorContent: View {
         focusedField = nil
         withAnimation(.snappy) {
             draft.isComplete = false
-            draft.sets.append(DraftSet())
+            draft.sets.append(DraftSet(entryUnit: AppSettings.weightUnit))
         }
     }
 
@@ -223,7 +232,7 @@ private struct WorkoutEditorContent: View {
             draft.isComplete = false
             draft.sets.removeAll { $0.id == set.id }
             if draft.sets.isEmpty {
-                draft.sets.append(DraftSet())
+                draft.sets.append(DraftSet(entryUnit: AppSettings.weightUnit))
             }
         }
     }
@@ -251,7 +260,9 @@ private struct WorkoutEditorContent: View {
             .filter { !$0.isValid }
             .count
 
-        if incompleteCount > 0 {
+        // When the user disabled the discard prompt, save straight away
+        // (invalid sets are still skipped by WorkoutService).
+        if incompleteCount > 0, confirmDiscard {
             alert = .incompleteSets(count: incompleteCount)
         } else {
             saveWorkout()

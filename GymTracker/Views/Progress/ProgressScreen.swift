@@ -133,14 +133,14 @@ struct ProgressScreen: View {
             Chart(history) { performance in
                 LineMark(
                     x: .value("Date", performance.date),
-                    y: .value("Est. 1RM (lb)", performance.estimatedOneRepMax)
+                    y: .value("Est. 1RM (\(AppSettings.weightUnit.abbreviation))", performance.estimatedOneRepMax)
                 )
                 .interpolationMethod(.catmullRom)
                 .foregroundStyle(Theme.primary)
 
                 PointMark(
                     x: .value("Date", performance.date),
-                    y: .value("Est. 1RM (lb)", performance.estimatedOneRepMax)
+                    y: .value("Est. 1RM (\(AppSettings.weightUnit.abbreviation))", performance.estimatedOneRepMax)
                 )
                 .symbolSize(40)
                 .foregroundStyle(Theme.primary)
@@ -167,21 +167,21 @@ struct ProgressScreen: View {
 
     private func setSummary(_ set: WorkoutSet?) -> String {
         guard let set else { return "—" }
-        return "\(AppFormatters.weight(set.weight)) × \(set.reps)"
+        return "\(AppFormatters.weightWithUnit(set.weight)) × \(set.reps)"
     }
 
     private func oneRepMaxSummary(_ set: WorkoutSet?) -> String {
         guard let set else { return "—" }
-        return "\(AppFormatters.weight(set.estimatedOneRepMax)) lb"
+        return AppFormatters.weightWithUnit(set.estimatedOneRepMax)
     }
 
     private func changeSummary(_ comparison: ProgressCalculator.BestComparison) -> String {
         guard comparison.currentBest != nil else { return "—" }
         guard comparison.previousBest != nil else { return "New" }
         let delta = comparison.change
-        if delta > 0 { return "+\(AppFormatters.weight(delta)) lb" }
-        if delta < 0 { return "\(AppFormatters.weight(delta)) lb" }
-        return "0 lb"
+        if delta > 0 { return "+\(AppFormatters.weightWithUnit(delta))" }
+        if delta < 0 { return "\(AppFormatters.weightWithUnit(delta))" }
+        return "0 \(AppSettings.weightUnit.abbreviation)"
     }
 
     private func changeIcon(_ comparison: ProgressCalculator.BestComparison) -> String {

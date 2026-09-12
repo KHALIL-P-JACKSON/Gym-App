@@ -107,7 +107,7 @@ struct HomeView: View {
                                 Text(exerciseName)
                                     .font(.subheadline)
                                 Spacer()
-                                Text("\(AppFormatters.weight(set.weight)) × \(set.reps)")
+                                Text("\(AppFormatters.weightWithUnit(set.weight)) × \(set.reps)")
                                     .font(.subheadline.weight(.semibold))
                                     .monospacedDigit()
                             }
@@ -214,9 +214,9 @@ struct HomeView: View {
         guard comparison.previousBest != nil else { return "New record" }
         let delta = comparison.change
         if delta > 0 {
-            return "+\(AppFormatters.weight(delta)) lb"
+            return "+\(AppFormatters.weightWithUnit(delta))"
         } else if delta < 0 {
-            return "\(AppFormatters.weight(delta)) lb"
+            return "\(AppFormatters.weightWithUnit(delta))"
         }
         return "No change yet"
     }

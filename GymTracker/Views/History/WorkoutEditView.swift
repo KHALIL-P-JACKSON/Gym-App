@@ -123,7 +123,7 @@ struct WorkoutEditView: View {
 
     private func setRow(at index: Int) -> some View {
         HStack(spacing: 10) {
-            TextField("lb", text: $rows[index].weightText)
+            TextField(AppSettings.weightUnit.abbreviation, text: $rows[index].weightText)
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.center)
             Text("x")
