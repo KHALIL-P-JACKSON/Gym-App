@@ -26,7 +26,7 @@ enum PreviewData {
         let shoulder = all.first { $0.name == "Shoulder Press" } ?? all.last!
         let triceps = all.first { $0.name == "Tricep Pushdown" } ?? all.first!
 
-        let workout = Workout(name: "Push Day", date: .now.addingTimeInterval(-86_400))
+        let workout = Workout(date: .now.addingTimeInterval(-86_400), name: "Push Day")
         var order = 0
 
         let benchSets: [(Double, Int)] = [(185, 8), (185, 8), (175, 8)]
