@@ -4,8 +4,9 @@ import SwiftData
 /// Persistence helpers for workout plans (preset splits + user plans).
 struct PlanStore {
 
-    /// Inserts missing preset plans and fixes sort order. User plans are
-    /// never modified or removed.
+    /// Inserts missing preset plans and fixes sort order. User edits to
+    /// preset plans (rename / exercises) are preserved — only missing
+    /// presets are inserted and sort order is repaired.
     static func seedIfNeeded(in context: ModelContext) {
         let existing = (try? context.fetch(FetchDescriptor<WorkoutPlan>())) ?? []
         let existingByName = Dictionary(
@@ -15,9 +16,14 @@ struct PlanStore {
         var madeChanges = false
         for (index, seed) in DefaultPlans.seeds.enumerated() {
             if let installed = existingByName[seed.name] {
+                // Preserve user edits: never overwrite name/exercises.
                 if installed.sortOrder != index || !installed.isPreset {
                     installed.sortOrder = index
                     installed.isPreset = true
+                    madeChanges = true
+                }
+                // Backfill exercises only if the plan somehow has none.
+                if installed.exerciseNames.isEmpty {
                     installed.exerciseNames = seed.exerciseNames
                     madeChanges = true
                 }
@@ -55,6 +61,18 @@ struct PlanStore {
         context.insert(plan)
         try? context.save()
         return plan
+    }
+
+    /// Updates a plan's name + exercises and persists the change.
+    /// Empty names/exercise lists are rejected.
+    @discardableResult
+    static func update(_ plan: WorkoutPlan, name: String, exerciseNames: [String], in context: ModelContext) -> Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !exerciseNames.isEmpty else { return false }
+        plan.name = trimmed
+        plan.exerciseNames = exerciseNames
+        try? context.save()
+        return true
     }
 
     static func delete(_ plan: WorkoutPlan, in context: ModelContext) {

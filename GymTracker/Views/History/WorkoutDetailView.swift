@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// Detailed view of a single workout, with delete support.
+/// Detailed view of a single workout, with edit + delete support.
 struct WorkoutDetailView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -9,6 +9,7 @@ struct WorkoutDetailView: View {
     let workout: Workout
 
     @State private var showDeleteConfirmation = false
+    @State private var showEditSheet = false
 
     var body: some View {
         ScrollView {
@@ -53,12 +54,24 @@ struct WorkoutDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showEditSheet = true
+                } label: {
+                    Image(systemName: "pencil")
+                }
+                .accessibilityLabel("Edit workout")
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 Button(role: .destructive) {
                     showDeleteConfirmation = true
                 } label: {
                     Image(systemName: "trash")
                 }
             }
+        }
+        .sheet(isPresented: $showEditSheet) {
+            WorkoutEditView(workout: workout)
+                .presentationDetents([.large])
         }
         .confirmationDialog(
             "Delete this workout?",

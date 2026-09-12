@@ -14,6 +14,7 @@ struct PlanView: View {
     @Query(sort: \WorkoutPlan.sortOrder) private var plans: [WorkoutPlan]
 
     @State private var showingCreateSheet = false
+    @State private var editingPlan: WorkoutPlan?
     @State private var appliedMessage: String?
 
     var body: some View {
@@ -46,9 +47,17 @@ struct PlanView: View {
             .navigationTitle("Plan")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showingCreateSheet) {
-                PlanBuilderSheet(exercises: libraryExercises) { name, selected in
+                PlanBuilderSheet(plan: nil, exercises: libraryExercises) { name, selected in
                     PlanStore.create(name: name, exerciseNames: selected, in: context)
                     showingCreateSheet = false
+                }
+                .presentationDetents([.large])
+            }
+            .sheet(item: $editingPlan) { plan in
+                PlanBuilderSheet(plan: plan, exercises: libraryExercises) { name, selected in
+                    if PlanStore.update(plan, name: name, exerciseNames: selected, in: context) {
+                        editingPlan = nil
+                    }
                 }
                 .presentationDetents([.large])
             }
@@ -80,6 +89,16 @@ struct PlanView: View {
                         .foregroundStyle(Theme.secondaryText)
                 }
                 Spacer()
+                // Every plan (preset or custom) is editable; only custom
+                // plans can be deleted.
+                Button {
+                    editingPlan = plan
+                } label: {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(Theme.primary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Edit \(plan.name)")
                 if canDelete {
                     Button(role: .destructive) {
                         PlanStore.delete(plan, in: context)
