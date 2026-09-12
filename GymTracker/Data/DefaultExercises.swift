@@ -49,29 +49,39 @@ struct ExerciseSeed {
     let category: ExerciseCategory
 }
 
-/// The fixed library of exercises available from launch.
+/// The master library of preset exercises.
 ///
 /// These are reference data only — the user's recorded results are never
-/// hardcoded here.
+/// hardcoded here. Every launch the app syncs missing presets onto the
+/// device, so adding a new seed below is enough to ship it to existing
+/// installs.
 enum DefaultExercises {
 
     static let seeds: [ExerciseSeed] = [
         // Chest
         ExerciseSeed(name: "Bench Press", muscleGroup: .chest, category: .push),
+        ExerciseSeed(name: "Smith Machine Bench Press", muscleGroup: .chest, category: .push),
         ExerciseSeed(name: "Incline Bench Press", muscleGroup: .chest, category: .push),
         ExerciseSeed(name: "Dumbbell Bench Press", muscleGroup: .chest, category: .push),
         ExerciseSeed(name: "Incline Dumbbell Press", muscleGroup: .chest, category: .push),
+        ExerciseSeed(name: "Pec Dec", muscleGroup: .chest, category: .push),
+        ExerciseSeed(name: "Dips", muscleGroup: .chest, category: .push),
         // Back
         ExerciseSeed(name: "Lat Pulldown", muscleGroup: .back, category: .pull),
+        ExerciseSeed(name: "Pull Ups", muscleGroup: .back, category: .pull),
         ExerciseSeed(name: "Seated Cable Row", muscleGroup: .back, category: .pull),
+        ExerciseSeed(name: "Single Arm Seated Cable Row", muscleGroup: .back, category: .pull),
         ExerciseSeed(name: "Barbell Row", muscleGroup: .back, category: .pull),
         // Shoulders
         ExerciseSeed(name: "Shoulder Press", muscleGroup: .shoulders, category: .push),
         ExerciseSeed(name: "Lateral Raise", muscleGroup: .shoulders, category: .push),
         // Arms
         ExerciseSeed(name: "Bicep Curl", muscleGroup: .arms, category: .pull),
+        ExerciseSeed(name: "Cable Curl", muscleGroup: .arms, category: .pull),
         ExerciseSeed(name: "Hammer Curl", muscleGroup: .arms, category: .pull),
+        ExerciseSeed(name: "Cable Hammer Curl", muscleGroup: .arms, category: .pull),
         ExerciseSeed(name: "Tricep Pushdown", muscleGroup: .arms, category: .push),
+        ExerciseSeed(name: "Tricep Overhead Extension", muscleGroup: .arms, category: .push),
         // Legs
         ExerciseSeed(name: "Squat", muscleGroup: .legs, category: .legs),
         ExerciseSeed(name: "Leg Press", muscleGroup: .legs, category: .legs),
@@ -86,26 +96,45 @@ enum DefaultExercises {
 enum ExerciseSeeder {
 
     static func seedIfNeeded(in context: ModelContext) {
-        // If there is already at least one exercise, the library was
-        // seeded on a previous launch.
-        guard (try? context.fetchCount(FetchDescriptor<Exercise>())) == 0 else { return }
+        // Load what's already on the device so we only add missing presets.
+        // Recorded history is never touched.
+        let existing = (try? context.fetch(FetchDescriptor<Exercise>())) ?? []
+        let existingByName = Dictionary(
+            existing.map { ($0.name, $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
 
+        var madeChanges = false
+
+        // Insert any preset that isn't installed yet, and line the preset
+        // sort order up with the master list above.
         for (index, seed) in DefaultExercises.seeds.enumerated() {
-            let exercise = Exercise(
-                name: seed.name,
-                muscleGroup: seed.muscleGroup.rawValue,
-                category: seed.category.rawValue,
-                isPreset: true,
-                sortOrder: index
-            )
-            context.insert(exercise)
+            if let installed = existingByName[seed.name] {
+                if installed.sortOrder != index {
+                    installed.sortOrder = index
+                    madeChanges = true
+                }
+            } else {
+                let exercise = Exercise(
+                    name: seed.name,
+                    muscleGroup: seed.muscleGroup.rawValue,
+                    category: seed.category.rawValue,
+                    isPreset: true,
+                    sortOrder: index
+                )
+                context.insert(exercise)
+                madeChanges = true
+            }
         }
 
+        // User-created exercises (a future feature) are never removed or
+        // reordered here.
+
+        guard madeChanges else { return }
         do {
             try context.save()
         } catch {
-            // Non-fatal: the library is re-seeded on the next launch.
-            print("Failed to seed preset exercises: \(error)")
+            print("Failed to sync preset exercise library: \(error)")
         }
     }
 }

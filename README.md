@@ -74,7 +74,7 @@ Uses the **Epley formula**: `weight × (1 + reps / 30)`. It is always labeled as
 
 ## Manual test checklist
 
-- [ ] First launch shows the full preset exercise library (18 exercises in 5 muscle groups).
+- [ ] First launch shows the full preset exercise library (26 exercises in 5 muscle groups; existing installs get new presets added automatically on the next launch).
 - [ ] Log a workout: Bench Press → 185 → 8 → Add Set → 185 → 8 → Finish Workout → summary appears.
 - [ ] Kill and relaunch the app → History shows the workout; tap it to see all sets.
 - [ ] Delete the workout from its detail screen → it disappears from History.
