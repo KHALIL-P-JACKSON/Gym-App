@@ -76,7 +76,7 @@ struct WorkoutEditView: View {
                 name = workout.name
                 date = workout.date
                 notes = workout.notes ?? ""
-                rows = workout.orderedSets.compactMap(EditedSetRow.from)
+                rows = workout.orderedSets.compactMap { EditedSetRow.from(set: $0) }
             }
         }
     }
