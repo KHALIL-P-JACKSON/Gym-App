@@ -10,7 +10,7 @@ struct WorkoutService {
     /// reaches the database.
     /// - Returns: the newly saved Workout.
     func save(session: WorkoutSession, in context: ModelContext) throws -> Workout {
-        let workout = Workout(date: .now, name: cleanedName(session.name))
+        let workout = Workout(date: session.date, name: cleanedName(session.name))
 
         var globalOrder = 0
         for draftExercise in session.exercises {

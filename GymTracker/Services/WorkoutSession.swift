@@ -9,10 +9,14 @@ import SwiftData
 @Observable
 final class WorkoutSession {
     var name: String
+    /// The date this workout took place. Normally "now", but can be a
+    /// past day when backfilling earlier workouts from History.
+    var date: Date
     var exercises: [DraftExercise]
 
-    init(name: String = "Workout", exercises: [DraftExercise] = []) {
+    init(name: String = "Workout", date: Date = .now, exercises: [DraftExercise] = []) {
         self.name = name
+        self.date = date
         self.exercises = exercises
     }
 
@@ -34,6 +38,7 @@ final class WorkoutSession {
 
     func reset() {
         name = "Workout"
+        date = .now
         exercises = []
     }
 

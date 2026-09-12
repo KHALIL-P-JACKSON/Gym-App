@@ -1,9 +1,12 @@
 import SwiftUI
 import SwiftData
 
-/// Chronological list of completed workouts.
+/// Chronological list of completed workouts. Also offers "Add Workout"
+/// so you can log sessions you did before the app was installed.
 struct HistoryView: View {
     @Query(sort: \Workout.date, order: .reverse) private var workouts: [Workout]
+
+    @State private var showWorkoutEditor = false
 
     var body: some View {
         NavigationStack {
@@ -32,6 +35,31 @@ struct HistoryView: View {
             }
             .background(Theme.background)
             .navigationTitle("History")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showWorkoutEditor = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel("Add Workout")
+                }
+            }
+        }
+        .sheet(isPresented: $showWorkoutEditor) {
+            NavigationStack {
+                WorkoutEditor(canPickDate: true) {
+                    showWorkoutEditor = false
+                }
+                .navigationTitle("Add Workout")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { showWorkoutEditor = false }
+                    }
+                }
+            }
+            .presentationDetents([.large])
         }
     }
 }

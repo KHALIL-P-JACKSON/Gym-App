@@ -38,7 +38,7 @@ Each exercise card also shows your **last recorded sets** for that exercise (`La
 | --- | --- |
 | **Home** | Time-of-day greeting, Start Workout shortcut, recent workout, day streak / total workouts / total volume, and a strength card comparing your top lift's current best vs previous best. |
 | **Workout** | The logging screen. Preset exercises organized by muscle group (Chest / Back / Shoulders / Arms / Legs). Fast numeric set entry, add/remove sets, finish to save. |
-| **History** | Completed workouts, newest first. Tap one for full details; a trash button deletes a workout (and its sets). |
+| **History** | Completed workouts, newest first. A **+** button lets you log a workout for any day (including past days you did before the app was installed). Tap a workout for full details; a trash button deletes a workout (and its sets). |
 | **Progress** | Pick any exercise to see current best, change vs previous workout-best, estimated 1RM, and a Swift Charts line chart of estimated 1RM over time. |
 
 ## Architecture
@@ -77,7 +77,8 @@ Uses the **Epley formula**: `weight × (1 + reps / 30)`. It is always labeled as
 - [ ] First launch shows the full preset exercise library (26 exercises in 5 muscle groups; existing installs get new presets added automatically on the next launch).
 - [ ] Log a workout: Bench Press → 185 → 8 → Add Set → 185 → 8 → Finish Workout → summary appears.
 - [ ] Kill and relaunch the app → History shows the workout; tap it to see all sets.
-- [ ] Delete the workout from its detail screen → it disappears from History.
+- [ ] History → **+** → pick a past date → log a few sets → Finish → the workout appears in History under that date.
+- [ ] Delete a workout from its detail screen → it disappears from History.
 - [ ] Start a new workout, tap Bench Press again → the card shows *Last Workout* 185 lb × 8 rows.
 - [ ] Finish with an empty/incomplete set → you're asked to discard it; it is never saved.
 - [ ] Progress tab → pick Bench Press → current best, change, est. 1RM and chart appear after 2+ workouts.
