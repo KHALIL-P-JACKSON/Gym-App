@@ -8,8 +8,9 @@ struct ExerciseCardView: View {
     var onAddSet: () -> Void
     var onRemoveExercise: () -> Void
     var onRemoveSet: (DraftSet) -> Void
+    var weightField: FocusState<SetField?>.Binding
+    var repsField: FocusState<SetField?>.Binding
 
-    @FocusState private var focusedField: SetField?
     @State private var pendingFocus: UUID?
 
     var body: some View {
@@ -24,12 +25,12 @@ struct ExerciseCardView: View {
                     set: set,
                     setNumber: index + 1,
                     onRemove: { onRemoveSet(set) },
-                    weightField: $focusedField,
-                    repsField: $focusedField
+                    weightField: weightField,
+                    repsField: repsField
                 )
                 .onAppear {
                     if pendingFocus == set.id {
-                        focusedField = .weight(set.id)
+                        weightField.wrappedValue = .weight(set.id)
                         pendingFocus = nil
                     }
                 }
@@ -38,12 +39,6 @@ struct ExerciseCardView: View {
         }
         .padding(Theme.padding)
         .cardStyle()
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") { focusedField = nil }
-            }
-        }
     }
 
     private var header: some View {

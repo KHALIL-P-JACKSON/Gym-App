@@ -18,6 +18,10 @@ struct WorkoutEditor: View {
     @State private var completedWorkout: Workout?
     @State private var alert: ActiveAlert?
 
+    /// Single source of truth for which field has the keyboard open.
+    /// Lives here so the keyboard toolbar ("Done") only exists once.
+    @FocusState private var focusedField: SetField?
+
     enum ActiveAlert: Identifiable {
         case incompleteSets(count: Int)
         case saveFailed
@@ -47,7 +51,9 @@ struct WorkoutEditor: View {
                             draft: draft,
                             onAddSet: { addSet(to: draft) },
                             onRemoveExercise: { session.removeExercise(at: index) },
-                            onRemoveSet: { set in removeSet(set, from: draft) }
+                            onRemoveSet: { set in removeSet(set, from: draft) },
+                            weightField: $focusedField,
+                            repsField: $focusedField
                         )
                     }
                 }
@@ -63,6 +69,12 @@ struct WorkoutEditor: View {
             .padding(.bottom, 8)
         }
         .background(Theme.background)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { focusedField = nil }
+            }
+        }
         .safeAreaInset(edge: .bottom) { finishBar }
         .fullScreenCover(item: $completedWorkout) { workout in
             WorkoutCompleteView(workout: workout) {
