@@ -2,8 +2,8 @@ import Foundation
 import SwiftData
 
 /// Muscle groups used to organize the exercise picker.
-enum MuscleGroup: String, CaseIterable, Identifiable {
-    case chest, back, shoulders, arms, legs
+enum MuscleGroup: String, CaseIterable, Identifiable, Hashable {
+    case chest, back, shoulders, arms, legs, calisthenics
 
     var id: String { rawValue }
 
@@ -14,6 +14,7 @@ enum MuscleGroup: String, CaseIterable, Identifiable {
         case .shoulders: return "Shoulders"
         case .arms: return "Arms"
         case .legs: return "Legs"
+        case .calisthenics: return "Calisthenics"
         }
     }
 
@@ -24,6 +25,7 @@ enum MuscleGroup: String, CaseIterable, Identifiable {
         case .shoulders: return "figure.arms.open"
         case .arms: return "dumbbell.fill"
         case .legs: return "figure.run"
+        case .calisthenics: return "figure.strengthtraining.functional"
         }
     }
 }
@@ -90,6 +92,17 @@ enum DefaultExercises {
         ExerciseSeed(name: "Leg Curl", muscleGroup: .legs, category: .legs),
         ExerciseSeed(name: "Romanian Deadlift", muscleGroup: .legs, category: .legs),
         ExerciseSeed(name: "Calf Raise", muscleGroup: .legs, category: .legs),
+        // Calisthenics
+        ExerciseSeed(name: "Push Ups", muscleGroup: .calisthenics, category: .push),
+        ExerciseSeed(name: "Pull Ups (Bodyweight)", muscleGroup: .calisthenics, category: .pull),
+        ExerciseSeed(name: "Chin Ups", muscleGroup: .calisthenics, category: .pull),
+        ExerciseSeed(name: "Bodyweight Dips", muscleGroup: .calisthenics, category: .push),
+        ExerciseSeed(name: "Bodyweight Squats", muscleGroup: .calisthenics, category: .legs),
+        ExerciseSeed(name: "Lunges", muscleGroup: .calisthenics, category: .legs),
+        ExerciseSeed(name: "Plank", muscleGroup: .calisthenics, category: .push),
+        ExerciseSeed(name: "Burpees", muscleGroup: .calisthenics, category: .push),
+        ExerciseSeed(name: "Mountain Climbers", muscleGroup: .calisthenics, category: .legs),
+        ExerciseSeed(name: "Hanging Knee Raises", muscleGroup: .calisthenics, category: .pull),
     ]
 }
 

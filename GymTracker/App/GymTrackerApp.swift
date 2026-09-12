@@ -11,7 +11,7 @@ struct GymTrackerApp: App {
     init() {
         do {
             container = try ModelContainer(
-                for: Workout.self, WorkoutSet.self, Exercise.self
+                for: Workout.self, WorkoutSet.self, Exercise.self, WorkoutPlan.self
             )
         } catch {
             fatalError("Failed to create the SwiftData container: \(error)")
@@ -19,6 +19,7 @@ struct GymTrackerApp: App {
 
         // Seed the preset exercise library the first time the app runs.
         ExerciseSeeder.seedIfNeeded(in: container.mainContext)
+        PlanStore.seedIfNeeded(in: container.mainContext)
     }
 
     var body: some Scene {

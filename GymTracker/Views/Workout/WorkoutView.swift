@@ -1,11 +1,13 @@
 import SwiftUI
 
 /// The Workout tab. Presents the shared logging editor; a draft in
-/// progress survives tab switches because the editor keeps its state
-/// within the tab's view hierarchy.
+/// progress survives tab switches because the session is owned by
+/// MainTabView and shared with the Plan tab.
 struct WorkoutView: View {
+    @Bindable var session: WorkoutSession
+
     var body: some View {
-        WorkoutEditor()
+        WorkoutEditor(session: session)
             .navigationTitle("Workout")
             .navigationBarTitleDisplayMode(.inline)
     }
@@ -13,7 +15,7 @@ struct WorkoutView: View {
 
 #Preview {
     NavigationStack {
-        WorkoutView()
+        WorkoutView(session: WorkoutSession())
     }
     .modelContainer(PreviewData.container)
 }

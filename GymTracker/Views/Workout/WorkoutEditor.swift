@@ -10,17 +10,32 @@ struct WorkoutEditor: View {
     var canPickDate: Bool = false
     /// Called after the user taps Done on the completion screen.
     var onFinished: () -> Void = {}
+    /// When nil the editor owns a local session (used for one-off
+    /// sheets like logging a past workout from History).
+    var session: WorkoutSession? = nil
+
+    @State private var localSession = WorkoutSession()
+
+    var body: some View {
+        WorkoutEditorContent(
+            session: session ?? localSession,
+            canPickDate: canPickDate,
+            onFinished: onFinished
+        )
+    }
+}
+
+/// Inner view that binds to a shared or local session. Split out so
+/// WorkoutEditor can own a fallback session while still using @Bindable.
+private struct WorkoutEditorContent: View {
+    @Bindable var session: WorkoutSession
+    var canPickDate: Bool = false
+    var onFinished: () -> Void = {}
 
     @Environment(\.modelContext) private var context
     @Query(sort: \Exercise.sortOrder) private var libraryExercises: [Exercise]
-
-    @State private var session = WorkoutSession()
     @State private var completedWorkout: Workout?
     @State private var alert: ActiveAlert?
-
-    /// Single source of truth for which field has the keyboard open.
-    /// Lives here so the keyboard toolbar ("Done") only exists once.
-    @FocusState private var focusedField: SetField?
 
     enum ActiveAlert: Identifiable {
         case incompleteSets(count: Int)
@@ -33,6 +48,10 @@ struct WorkoutEditor: View {
             }
         }
     }
+
+    /// Single source of truth for which field has the keyboard open.
+    /// Lives here so the keyboard toolbar ("Done") only exists once.
+    @FocusState private var focusedField: SetField?
 
     var body: some View {
         ScrollView {
@@ -50,10 +69,15 @@ struct WorkoutEditor: View {
                         ExerciseCardView(
                             draft: draft,
                             onAddSet: { addSet(to: draft) },
+                            onComplete: { completeExercise(draft) },
+                            onEdit: { editExercise(draft) },
                             onRemoveExercise: { session.removeExercise(at: index) },
                             onRemoveSet: { set in removeSet(set, from: draft) },
                             weightField: $focusedField,
-                            repsField: $focusedField
+                            repsField: $focusedField,
+                            isLastExercise: index == session.exercises.count - 1,
+                            canFinishWorkout: session.validSetCount > 0,
+                            onFinishWorkout: finishWorkout
                         )
                     }
                 }
@@ -61,7 +85,8 @@ struct WorkoutEditor: View {
                 ExercisePickerView(
                     exercises: libraryExercises,
                     isAdded: { session.contains($0) },
-                    onSelect: addExercise
+                    onSelect: addExercise,
+                    onCreateCustom: createCustomExercise
                 )
             }
             .padding(.top, 4)
@@ -75,7 +100,7 @@ struct WorkoutEditor: View {
                 Button("Done") { focusedField = nil }
             }
         }
-        .safeAreaInset(edge: .bottom) { finishBar }
+        .safeAreaInset(edge: .bottom) { summaryBar }
         .fullScreenCover(item: $completedWorkout) { workout in
             WorkoutCompleteView(workout: workout) {
                 completedWorkout = nil
@@ -105,7 +130,6 @@ struct WorkoutEditor: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            @Bindable var session = session
             if canPickDate {
                 DatePicker(
                     "Workout Date",
@@ -125,9 +149,12 @@ struct WorkoutEditor: View {
         }
     }
 
-    // MARK: - Bottom bar
+    // MARK: - Summary bar
 
-    private var finishBar: some View {
+    /// Compact summary pinned at the bottom. The Finish Workout action
+    /// itself lives inline below the most recently added exercise so it
+    /// stays anchored instead of jumping as content grows.
+    private var summaryBar: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(session.exercises.count) \(session.exercises.count == 1 ? "exercise" : "exercises")")
@@ -137,17 +164,23 @@ struct WorkoutEditor: View {
                     .foregroundStyle(Theme.secondaryText)
             }
             Spacer()
-            Button(action: finishWorkout) {
-                Label("Finish Workout", systemImage: "checkmark")
-                    .font(.headline)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(Theme.primary)
-            .disabled(session.validSetCount == 0)
+            Text("Finish in last card ↑")
+                .font(.caption)
+                .foregroundStyle(Theme.secondaryText)
         }
         .padding(.horizontal, Theme.padding)
         .padding(.vertical, 10)
         .background(.bar, ignoresSafeAreaEdges: [.bottom, .horizontal])
+    }
+
+    // MARK: - Plan support
+
+    /// Adds every exercise from a plan that isn't already in the session.
+    func applyPlan(exercises: [Exercise]) {
+        for exercise in exercises where !session.contains(exercise) {
+            session.addExercise(exercise)
+            session.exercises.last?.previousSets = WorkoutService().previousSets(for: exercise, in: context)
+        }
     }
 
     // MARK: - Actions
@@ -159,15 +192,54 @@ struct WorkoutEditor: View {
         session.exercises.last?.previousSets = WorkoutService().previousSets(for: exercise, in: context)
     }
 
+    /// Creates a custom exercise, adds it to the library, and puts it
+    /// straight into the current session.
+    private func createCustomExercise(name: String, muscleGroup: MuscleGroup) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let existing = libraryExercises.map(\.sortOrder).max() ?? -1
+        let exercise = Exercise(
+            name: trimmed,
+            muscleGroup: muscleGroup.rawValue,
+            category: ExerciseCategory.push.rawValue,
+            isPreset: false,
+            sortOrder: existing + 1
+        )
+        context.insert(exercise)
+        try? context.save()
+        addExercise(exercise)
+    }
+
     private func addSet(to draft: DraftExercise) {
+        focusedField = nil
         withAnimation(.snappy) {
+            draft.isComplete = false
             draft.sets.append(DraftSet())
         }
     }
 
     private func removeSet(_ set: DraftSet, from draft: DraftExercise) {
         withAnimation(.snappy) {
+            draft.isComplete = false
             draft.sets.removeAll { $0.id == set.id }
+            if draft.sets.isEmpty {
+                draft.sets.append(DraftSet())
+            }
+        }
+    }
+
+    /// Locks one exercise's values so the user can move on to the next.
+    private func completeExercise(_ draft: DraftExercise) {
+        guard draft.hasValidSets else { return }
+        focusedField = nil
+        withAnimation(.snappy) {
+            draft.isComplete = true
+        }
+    }
+
+    private func editExercise(_ draft: DraftExercise) {
+        withAnimation(.snappy) {
+            draft.isComplete = false
         }
     }
 

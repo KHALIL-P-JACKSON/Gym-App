@@ -37,7 +37,8 @@ Each exercise card also shows your **last recorded sets** for that exercise (`La
 | Tab | Purpose |
 | --- | --- |
 | **Home** | Time-of-day greeting, Start Workout shortcut, recent workout, day streak / total workouts / total volume, and a strength card comparing your top lift's current best vs previous best. |
-| **Workout** | The logging screen. Preset exercises organized by muscle group (Chest / Back / Shoulders / Arms / Legs). Fast numeric set entry, add/remove sets, finish to save. |
+| **Workout** | The logging screen. Preset exercises organized by muscle group (Chest / Back / Shoulders / Arms / Legs / Calisthenics), plus custom exercises. Fast numeric set entry, add/remove sets, per-exercise Complete (lock) / Edit, and an inline Finish Workout button anchored below the most recently added exercise. |
+| **Plan** | Preset workout splits (Push / Pull / Legs, Upper, Full Body, Calisthenics) that load all exercises into the Workout tab at once, plus custom plan builder (name + multi-select exercises) with delete for user plans. |
 | **History** | Completed workouts, newest first. A **+** button lets you log a workout for any day (including past days you did before the app was installed). Tap a workout for full details; a trash button deletes a workout (and its sets). |
 | **Progress** | Pick any exercise to see current best, change vs previous workout-best, estimated 1RM, and a Swift Charts line chart of estimated 1RM over time. |
 
@@ -46,12 +47,14 @@ Each exercise card also shows your **last recorded sets** for that exercise (`La
 ```
 GymTracker/
 ├── App/            GymTrackerApp (SwiftData container + seeding), Theme (design system)
-├── Models/         Exercise, Workout, WorkoutSet (SwiftData @Model)
-├── Data/           DefaultExercises (preset library + seeder), PreviewData (previews only)
+├── Models/         Exercise, Workout, WorkoutSet, WorkoutPlan (SwiftData @Model)
+├── Data/           DefaultExercises (preset library + seeder), DefaultPlans (preset splits),
+│                   PreviewData (previews only)
 ├── Services/       WorkoutService (saving / previous performance),
 │                   ProgressCalculator (best lifts, estimated 1RM, streaks, history),
-│                   WorkoutSession (in-memory draft of the workout being logged)
-├── Views/          MainTabView, Home/, Workout/, History/, Progress/
+│                   WorkoutSession (in-memory draft of the workout being logged),
+│                   PlanStore (preset/custom plan persistence)
+├── Views/          MainTabView, Home/, Workout/, Plan/, History/, Progress/
 ├── Components/     StatCard, SetRow, EmptyStateView, ExerciseGroupList
 └── Utilities/      AppFormatters (shared date/number formatting)
 ```
@@ -74,7 +77,12 @@ Uses the **Epley formula**: `weight × (1 + reps / 30)`. It is always labeled as
 
 ## Manual test checklist
 
-- [ ] First launch shows the full preset exercise library (27 exercises in 5 muscle groups; existing installs get new presets added automatically on the next launch).
+- [ ] First launch shows the full preset exercise library (37 exercises in 6 muscle groups; existing installs get new presets added automatically on the next launch).
+- [ ] Plan tab shows 6 preset splits; tapping "Add to Workout" loads all exercises into the Workout tab and jumps there.
+- [ ] Plan tab → Create Custom Plan → name + pick exercises → Save → appears under My Plans; trash deletes it.
+- [ ] Workout → Custom button → name + muscle group → exercise appears in the picker (under its group) and is added to the session.
+- [ ] Log a workout: Bench Press → 185 → 8 → Complete locks the card → Edit unlocks → Add Set unlocks and appends a row.
+- [ ] Finish Workout appears inline below the most recently added exercise (disabled until at least one valid set); bottom bar is a summary only.
 - [ ] Log a workout: Bench Press → 185 → 8 → Add Set → 185 → 8 → Finish Workout → summary appears.
 - [ ] Kill and relaunch the app → History shows the workout; tap it to see all sets.
 - [ ] History → **+** → pick a past date → log a few sets → Finish → the workout appears in History under that date.

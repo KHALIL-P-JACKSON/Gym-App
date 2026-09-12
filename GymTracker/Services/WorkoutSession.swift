@@ -31,6 +31,18 @@ final class WorkoutSession {
         exercises.append(DraftExercise(exercise: exercise))
     }
 
+    /// Adds every exercise in the list that isn't already in the session.
+    /// Returns the number of exercises actually added.
+    @discardableResult
+    func addExercises(_ exercisesToAdd: [Exercise]) -> Int {
+        var added = 0
+        for exercise in exercisesToAdd where !contains(exercise) {
+            exercises.append(DraftExercise(exercise: exercise))
+            added += 1
+        }
+        return added
+    }
+
     func removeExercise(at index: Int) {
         guard exercises.indices.contains(index) else { return }
         exercises.remove(at: index)
@@ -57,10 +69,18 @@ final class DraftExercise {
     var sets: [DraftSet]
     /// Sets from the user's most recent workout with this exercise.
     var previousSets: [WorkoutSet] = []
+    /// When true the exercise is locked: values can't be edited until
+    /// the user taps Edit again.
+    var isComplete: Bool = false
 
     init(exercise: Exercise, sets: [DraftSet] = []) {
         self.exercise = exercise
         self.sets = sets.isEmpty ? [DraftSet()] : sets
+    }
+
+    /// All sets have a weight and rep count (and at least one set exists).
+    var hasValidSets: Bool {
+        !sets.isEmpty && sets.allSatisfy { $0.isValid }
     }
 }
 

@@ -2,15 +2,30 @@ import SwiftUI
 import SwiftData
 
 /// The grid of preset exercise buttons, grouped by muscle group.
+/// Also lets the user create a custom exercise inline.
 struct ExercisePickerView: View {
     let exercises: [Exercise]
     let isAdded: (Exercise) -> Bool
     let onSelect: (Exercise) -> Void
+    let onCreateCustom: (String, MuscleGroup) -> Void
+
+    @State private var showingCustomSheet = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Select Exercise")
-                .font(.title3.weight(.semibold))
+            HStack {
+                Text("Select Exercise")
+                    .font(.title3.weight(.semibold))
+                Spacer()
+                Button {
+                    showingCustomSheet = true
+                } label: {
+                    Label("Custom", systemImage: "plus.circle")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.primary)
+            }
 
             if exercises.isEmpty {
                 Text("No exercises available. Restart the app to restore the preset library.")
@@ -24,6 +39,13 @@ struct ExercisePickerView: View {
                     }
                 }
             }
+        }
+        .sheet(isPresented: $showingCustomSheet) {
+            CustomExerciseSheet { name, group in
+                onCreateCustom(name, group)
+                showingCustomSheet = false
+            }
+            .presentationDetents([.medium])
         }
     }
 
