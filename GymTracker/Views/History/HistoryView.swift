@@ -12,14 +12,22 @@ struct HistoryView: View {
         NavigationStack {
             Group {
                 if workouts.isEmpty {
-                    EmptyStateView(
-                        iconName: "clock.arrow.circlepath",
-                        title: "No workouts yet",
-                        message: "Record your first workout and it will show up here."
-                    )
+                    VStack(spacing: 0) {
+                        header
+                        Spacer(minLength: 0)
+                        EmptyStateView(
+                            iconName: "clock.arrow.circlepath",
+                            title: "No workouts yet",
+                            message: "Record your first workout and it will show up here."
+                        )
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.horizontal, Theme.padding)
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            header
                             ForEach(workouts) { workout in
                                 NavigationLink {
                                     WorkoutDetailView(workout: workout)
@@ -29,15 +37,13 @@ struct HistoryView: View {
                                 .buttonStyle(.plain)
                             }
                         }
-                        .padding(Theme.padding)
+                        .padding(.horizontal, Theme.padding)
+                        .padding(.bottom, Theme.padding)
                     }
                 }
             }
             .background(Theme.background)
             .toolbar(.hidden, for: .navigationBar)
-            .safeAreaInset(edge: .top, spacing: 0) {
-                header
-            }
         }
         .sheet(isPresented: $showWorkoutEditor) {
             NavigationStack {
@@ -57,7 +63,7 @@ struct HistoryView: View {
     }
 
     /// Inline header: the "History" title and the add button side by
-    /// side on the same line, pinned to the top.
+    /// side on the same line at the top of the screen.
     private var header: some View {
         HStack(spacing: 12) {
             Text("History")
@@ -67,16 +73,13 @@ struct HistoryView: View {
                 showWorkoutEditor = true
             } label: {
                 Image(systemName: "plus.circle.fill")
-                    .font(.title2)
+                    .font(.title)
                     .foregroundStyle(Theme.primary)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Add Workout")
         }
-        .padding(.horizontal, Theme.padding)
         .padding(.vertical, 6)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.background)
     }
 }
 
