@@ -2,14 +2,23 @@ import SwiftUI
 import SwiftData
 
 /// A card for one exercise being logged in the current workout.
-/// Shows the user's last performance, set inputs, and an Add Set button.
+/// Shows the user's last performance, set inputs, Add Set / Complete /
+/// Edit controls, and an inline Finish Workout button when this is the
+/// most recently added exercise.
 struct ExerciseCardView: View {
     @Bindable var draft: DraftExercise
     var onAddSet: () -> Void
+    var onComplete: () -> Void
+    var onEdit: () -> Void
     var onRemoveExercise: () -> Void
     var onRemoveSet: (DraftSet) -> Void
     var weightField: FocusState<SetField?>.Binding
     var repsField: FocusState<SetField?>.Binding
+    /// When true this card is the last exercise in the session, so it
+    /// hosts the inline Finish Workout button directly underneath.
+    var isLastExercise: Bool = false
+    var canFinishWorkout: Bool = false
+    var onFinishWorkout: () -> Void = {}
 
     @State private var pendingFocus: UUID?
 
@@ -21,21 +30,28 @@ struct ExerciseCardView: View {
             }
             columnHeader
             ForEach(Array(draft.sets.enumerated()), id: \.element.id) { index, set in
-                SetRow(
-                    set: set,
-                    setNumber: index + 1,
-                    onRemove: { onRemoveSet(set) },
-                    weightField: weightField,
-                    repsField: repsField
-                )
-                .onAppear {
-                    if pendingFocus == set.id {
-                        weightField.wrappedValue = .weight(set.id)
-                        pendingFocus = nil
+                if draft.isComplete {
+                    lockedSetRow(set: set, setNumber: index + 1)
+                } else {
+                    SetRow(
+                        set: set,
+                        setNumber: index + 1,
+                        onRemove: { onRemoveSet(set) },
+                        weightField: weightField,
+                        repsField: repsField
+                    )
+                    .onAppear {
+                        if pendingFocus == set.id {
+                            weightField.wrappedValue = .weight(set.id)
+                            pendingFocus = nil
+                        }
                     }
                 }
             }
-            addSetButton
+            actionButtons
+            if isLastExercise {
+                inlineFinishButton
+            }
         }
         .padding(Theme.padding)
         .cardStyle()
@@ -44,8 +60,15 @@ struct ExerciseCardView: View {
     private var header: some View {
         HStack(alignment: .top, spacing: 10) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(draft.exercise.name)
-                    .font(.headline)
+                HStack(spacing: 8) {
+                    Text(draft.exercise.name)
+                        .font(.headline)
+                    if draft.isComplete {
+                        Label("Done", systemImage: "checkmark.circle.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Theme.success)
+                    }
+                }
                 Text(draft.exercise.muscleGroup.capitalized)
                     .font(.caption)
                     .foregroundStyle(Theme.secondaryText)
@@ -107,18 +130,82 @@ struct ExerciseCardView: View {
         .foregroundStyle(Theme.secondaryText)
     }
 
-    private var addSetButton: some View {
-        Button {
-            onAddSet()
-            // Focus the new row's weight field once it appears.
-            pendingFocus = draft.sets.last?.id
-        } label: {
-            Label("Add Set", systemImage: "plus")
+    private func lockedSetRow(set: DraftSet, setNumber: Int) -> some View {
+        HStack(spacing: 8) {
+            Text("\(setNumber)")
                 .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.secondaryText)
+                .frame(width: 24, height: 24)
+                .background(Circle().fill(Theme.fieldBackground))
+            Text(AppFormatters.weight(set.weight ?? 0))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
+                .font(.title3.weight(.medium).monospacedDigit())
+                .padding(.vertical, 8)
+                .background(Theme.fieldBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            Text("\(set.reps ?? 0)")
+                .frame(maxWidth: .infinity)
+                .font(.title3.weight(.medium).monospacedDigit())
+                .padding(.vertical, 8)
+                .background(Theme.fieldBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            Image(systemName: "lock.fill")
+                .font(.caption)
+                .foregroundStyle(Theme.secondaryText)
+                .frame(width: 28)
         }
-        .buttonStyle(.bordered)
+    }
+
+    /// Add Set + Complete (or Edit when locked) side by side.
+    private var actionButtons: some View {
+        HStack(spacing: 10) {
+            if draft.isComplete {
+                Button {
+                    onEdit()
+                } label: {
+                    Label("Edit", systemImage: "pencil")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.primary)
+            } else {
+                Button {
+                    onAddSet()
+                    pendingFocus = draft.sets.last?.id
+                } label: {
+                    Label("Add Set", systemImage: "plus")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.primary)
+                Button(action: onComplete) {
+                    Label("Complete", systemImage: "checkmark")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Theme.success)
+                .disabled(!draft.hasValidSets)
+            }
+        }
+    }
+
+    /// Finish Workout anchored right below the most recently added
+    /// exercise, so it never jumps around as the picker grows.
+    @ViewBuilder
+    private var inlineFinishButton: some View {
+        Button(action: onFinishWorkout) {
+            Label("Finish Workout", systemImage: "checkmark")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+        }
+        .buttonStyle(.borderedProminent)
         .tint(Theme.primary)
+        .disabled(!canFinishWorkout)
+        .padding(.top, 2)
     }
 }

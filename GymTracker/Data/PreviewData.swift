@@ -9,10 +9,11 @@ enum PreviewData {
     static let container: ModelContainer = {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try! ModelContainer(
-            for: Workout.self, WorkoutSet.self, Exercise.self,
+            for: Workout.self, WorkoutSet.self, Exercise.self, WorkoutPlan.self,
             configurations: configuration
         )
         ExerciseSeeder.seedIfNeeded(in: container.mainContext)
+        PlanStore.seedIfNeeded(in: container.mainContext)
         return container
     }()
 
