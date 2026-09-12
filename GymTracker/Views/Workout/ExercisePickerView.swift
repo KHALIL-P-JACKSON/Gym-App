@@ -53,15 +53,26 @@ struct ExercisePickerView: View {
         return Button {
             onSelect(exercise)
         } label: {
-            HStack(spacing: 8) {
-                Image(systemName: added ? "checkmark.circle.fill" : "plus.circle.fill")
-                    .foregroundStyle(added ? Theme.success : Theme.primary)
-                Text(exercise.name)
+            ZStack(alignment: .leading) {
+                // Hidden two-line reference so every button is exactly
+                // the size of a two-line name. Short names don't shrink
+                // the button, and names longer than two lines are
+                // truncated to two lines with an ellipsis.
+                Text("Hidden\nReference")
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(added ? Color.secondary : Color.primary)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(2)
-                Spacer(minLength: 0)
+                    .hidden()
+
+                HStack(spacing: 8) {
+                    Image(systemName: added ? "checkmark.circle.fill" : "plus.circle.fill")
+                        .foregroundStyle(added ? Theme.success : Theme.primary)
+                    Text(exercise.name)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(added ? Color.secondary : Color.primary)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(2)
+                        .truncationMode(.tail)
+                    Spacer(minLength: 0)
+                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
