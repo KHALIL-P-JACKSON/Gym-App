@@ -34,16 +34,9 @@ struct HistoryView: View {
                 }
             }
             .background(Theme.background)
-            .navigationTitle("History")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showWorkoutEditor = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                    .accessibilityLabel("Add Workout")
-                }
+            .toolbar(.hidden, for: .navigationBar)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                header
             }
         }
         .sheet(isPresented: $showWorkoutEditor) {
@@ -61,6 +54,29 @@ struct HistoryView: View {
             }
             .presentationDetents([.large])
         }
+    }
+
+    /// Inline header: the "History" title and the add button side by
+    /// side on the same line, pinned to the top.
+    private var header: some View {
+        HStack(spacing: 12) {
+            Text("History")
+                .font(.largeTitle.weight(.bold))
+            Spacer()
+            Button {
+                showWorkoutEditor = true
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(Theme.primary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Add Workout")
+        }
+        .padding(.horizontal, Theme.padding)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.background)
     }
 }
 
