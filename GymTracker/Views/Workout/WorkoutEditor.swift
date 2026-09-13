@@ -62,9 +62,17 @@ private struct WorkoutEditorContent: View {
             VStack(alignment: .leading, spacing: 20) {
                 header
 
-                let filteredExercises = session.exercises.filter {
-                    $0.exercise.name.lowercased().contains(searchQuery.lowercased())
-                }
+                let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+                let filteredExercises: [DraftExercise] = trimmedQuery.isEmpty
+                    ? session.exercises
+                    : session.exercises.filter {
+                        $0.exercise.name.localizedCaseInsensitiveContains(trimmedQuery)
+                    }
+                let filteredLibrary: [Exercise] = trimmedQuery.isEmpty
+                    ? libraryExercises
+                    : libraryExercises.filter {
+                        $0.name.localizedCaseInsensitiveContains(trimmedQuery)
+                    }
 
                 if session.exercises.isEmpty {
                     EmptyStateView(
@@ -79,17 +87,17 @@ private struct WorkoutEditorContent: View {
                         message: "Try adjusting your search to find matching exercises."
                     )
                 } else {
-                    ForEach(Array(filteredExercises.enumerated()), id: \.element.exercise.id) { index, draft in
+                    ForEach(Array(filteredExercises.enumerated()), id: \.element.exercise.id) { _, draft in
                         ExerciseCardView(
                             draft: draft,
                             onAddSet: { addSet(to: draft) },
                             onComplete: { completeExercise(draft) },
                             onEdit: { editExercise(draft) },
-                            onRemoveExercise: { session.removeExercise(at: index) },
+                            onRemoveExercise: { removeDraft(draft) },
                             onRemoveSet: { set in removeSet(set, from: draft) },
                             weightField: $focusedField,
                             repsField: $focusedField,
-                            isLastExercise: index == filteredExercises.count - 1,
+                            isLastExercise: draft.exercise.id == filteredExercises.last?.exercise.id,
                             canFinishWorkout: session.validSetCount > 0,
                             onFinishWorkout: finishWorkout
                         )
@@ -97,7 +105,7 @@ private struct WorkoutEditorContent: View {
                 }
 
                 ExercisePickerView(
-                    exercises: libraryExercises,
+                    exercises: filteredLibrary,
                     isAdded: { session.contains($0) },
                     onSelect: addExercise,
                     onCreateCustom: createCustomExercise
@@ -250,6 +258,14 @@ private struct WorkoutEditorContent: View {
             if draft.sets.isEmpty {
                 draft.sets.append(DraftSet(entryUnit: AppSettings.weightUnit))
             }
+        }
+    }
+
+    /// Removes a draft by identity (not filtered-list index) so deleting
+    /// while searching removes the correct exercise.
+    private func removeDraft(_ draft: DraftExercise) {
+        if let index = session.exercises.firstIndex(where: { $0.exercise.id == draft.exercise.id }) {
+            session.removeExercise(at: index)
         }
     }
 
