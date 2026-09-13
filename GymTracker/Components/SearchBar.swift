@@ -12,29 +12,17 @@ struct SearchBar: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            TextField(
-                text: $text,
-                prompt: Text(placeholder)
-            )
-            .onSubmit { onSubmit() }
-            .onChange(of: text) { _, newValue in
-                if newValue.isEmpty {
-                    onClear()
-                }
+            TextField(text: $text) {
+                Text(placeholder)
             }
+            .onSubmit { onSubmit() }
             .textFieldStyle(.plain)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 999, style: .continuous)
-                    .fill(Theme.fieldBackground)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 999, style: .continuous)
-                    .stroke(Theme.primary.opacity(0.35), lineWidth: 1)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 999, style: .continuous))
             .padding(.horizontal, 11)
             .padding(.vertical, 7)
+            .background(RoundedRectangle(cornerRadius: 999, style: .continuous).fill(Theme.fieldBackground))
+            .overlay(RoundedRectangle(cornerRadius: 999, style: .continuous).stroke(Theme.primary.opacity(0.35), lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 999, style: .continuous))
 
             if !text.isEmpty {
                 Button {
@@ -45,10 +33,10 @@ struct SearchBar: View {
                         .foregroundStyle(Theme.primary)
                 }
                 .frame(width: 30, height: 30)
-                .background(
+                .background {
                     RoundedRectangle(cornerRadius: 999, style: .continuous)
                         .fill(Theme.fieldBackground)
-                )
+                }
             } else {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 15, weight: .semibold))
