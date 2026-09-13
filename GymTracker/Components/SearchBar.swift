@@ -13,15 +13,15 @@ struct SearchBar: View {
     var body: some View {
         HStack(spacing: 8) {
             TextField(
-                text,
-                onSubmit: onSubmit,
-                onChange: { newValue in
-                    if newValue.isEmpty {
-                        onClear()
-                    }
-                },
+                text: $text,
                 prompt: Text(placeholder)
             )
+            .onSubmit { onSubmit() }
+            .onChange(of: text) { _, newValue in
+                if newValue.isEmpty {
+                    onClear()
+                }
+            }
             .textFieldStyle(.plain)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
