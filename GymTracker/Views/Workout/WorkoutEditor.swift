@@ -36,7 +36,7 @@ private struct WorkoutEditorContent: View {
     @Query(sort: \Exercise.sortOrder) private var libraryExercises: [Exercise]
     @State private var completedWorkout: Workout?
     @State private var alert: ActiveAlert?
-
+    @State private var searchQuery = ""
     enum ActiveAlert: Identifiable {
         case incompleteSets(count: Int)
         case saveFailed
@@ -62,14 +62,24 @@ private struct WorkoutEditorContent: View {
             VStack(alignment: .leading, spacing: 20) {
                 header
 
+                let filteredExercises = session.exercises.filter {
+                    $0.exercise.name.lowercased().contains(searchQuery.lowercased())
+                }
+
                 if session.exercises.isEmpty {
                     EmptyStateView(
                         iconName: "hand.tap",
                         title: "Pick your first exercise",
                         message: "Choose an exercise below to start building your workout."
                     )
+                } else if filteredExercises.isEmpty {
+                    EmptyStateView(
+                        iconName: "magnifyingglass",
+                        title: "No exercises found",
+                        message: "Try adjusting your search to find matching exercises."
+                    )
                 } else {
-                    ForEach(Array(session.exercises.enumerated()), id: \.element.exercise.id) { index, draft in
+                    ForEach(Array(filteredExercises.enumerated()), id: \.element.exercise.id) { index, draft in
                         ExerciseCardView(
                             draft: draft,
                             onAddSet: { addSet(to: draft) },
@@ -79,7 +89,7 @@ private struct WorkoutEditorContent: View {
                             onRemoveSet: { set in removeSet(set, from: draft) },
                             weightField: $focusedField,
                             repsField: $focusedField,
-                            isLastExercise: index == session.exercises.count - 1,
+                            isLastExercise: index == filteredExercises.count - 1,
                             canFinishWorkout: session.validSetCount > 0,
                             onFinishWorkout: finishWorkout
                         )
@@ -138,7 +148,13 @@ private struct WorkoutEditorContent: View {
     // MARK: - Header
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
+            SearchBar(
+                placeholder: "Search exercises",
+                onSubmit: onSearchSubmit,
+                onClear: onSearchClear,
+                text: $searchQuery
+            )
             if canPickDate {
                 DatePicker(
                     "Workout Date",
@@ -278,5 +294,14 @@ private struct WorkoutEditorContent: View {
         } catch {
             alert = .saveFailed
         }
+    }
+
+    /// Handles submit and clear events for the search bar.
+    private func onSearchSubmit() {
+        // The query is bound live; filtered exercises update immediately.
+    }
+
+    private func onSearchClear() {
+        searchQuery = ""
     }
 }

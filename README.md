@@ -37,7 +37,7 @@ Each exercise card also shows your **last recorded sets** for that exercise (`La
 | Tab | Purpose |
 | --- | --- |
 | **Home** | Time-of-day greeting, Start Workout shortcut, recent workout, day streak / total workouts / total volume, and a strength card comparing your top lift's current best vs previous best. |
-| **Workout** | The logging screen. Preset exercises organized by muscle group (Chest / Back / Shoulders / Arms / Legs / Calisthenics), plus custom exercises. Fast numeric set entry, add/remove sets, per-exercise Complete (lock) / Edit, and an inline Finish Workout button anchored below the most recently added exercise. |
+| **Workout** | The logging screen. Preset exercises organized by muscle group (Chest / Back / Shoulders / Arms / Legs / Calisthenics), plus custom exercises. Fast numeric set entry, add/remove sets, per-exercise Complete (lock) / Edit, a search bar to filter exercises, and an inline Finish Workout button anchored below the most recently added exercise. |
 | **Plan** | Preset workout splits (Push / Pull / Legs, Upper, Full Body, Calisthenics) that load all exercises into the Workout tab at once. Create custom plans (name + multi-select), edit any plan's name/exercises (pencil), delete custom plans (trash). |
 | **History** | Completed workouts, newest first. A **+** button lets you log a workout for any day (including past days you did before the app was installed). Tap a workout for full details; pencil edits name/date/notes/sets (add/remove sets + exercises), trash deletes it (and its sets). |
 | **Progress** | Pick any exercise to see current best, change vs previous workout-best, estimated 1RM, and a Swift Charts line chart of estimated 1RM over time. |
@@ -102,4 +102,4 @@ Uses the **Epley formula**: `weight × (1 + reps / 30)`. It is always labeled as
 
 ## Roadmap hooks (not implemented yet)
 
-The architecture leaves room for: iCloud sync (SwiftData's CloudKit support), HealthKit integration (HKWorkout data is derivable from `Workout`), exercise search/custom exercises, workout templates (Push/Pull/Legs from the stored `category`), rest timers, personal records, bodyweight/measurement tracking, CSV export, and richer Progress calculations — all without restructuring the models or services.
+The architecture leaves room for: iCloud sync (SwiftData's CloudKit support), HealthKit integration (HKWorkout data is derivable from `Workout`), custom exercise templates (Push/Pull/Legs from the stored `category`), rest timers, personal records, bodyweight/measurement tracking, CSV export, and richer Progress calculations — all without restructuring the models or services.
