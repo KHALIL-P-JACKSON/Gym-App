@@ -114,4 +114,60 @@ final class WorkoutDraftPersistenceTests: XCTestCase {
             XCTAssertNil(try store.load())
         }
     }
+
+    func testMissingExerciseKeepsRemainingDraftEntries() async throws {
+        try withStore { directory, store in
+            let database = try container(at: directory)
+            let context = database.mainContext
+            let bench = try exercise("Bench", in: context)
+            let fly = try exercise("Fly", in: context)
+            let session = WorkoutSession.restore(in: context, store: store)
+            session.addExercises([bench, fly])
+            session.exercises[1].sets[0].weightText = "30."
+            context.delete(bench)
+            try context.save()
+
+            let restored = WorkoutSession.restore(in: context, store: store)
+            XCTAssertEqual(restored.exercises.map { $0.exercise.id }, [fly.id])
+            XCTAssertEqual(restored.exercises[0].sets[0].weightText, "30.")
+            restored.exercises[0].sets[0].repsText = "12"
+            XCTAssertEqual(try XCTUnwrap(store.load()).exercises.count, 1)
+        }
+    }
+
+    func testPreviousPerformanceIsReloadedWithoutChangingCurrentEntries() async throws {
+        try withStore { directory, store in
+            let database = try container(at: directory)
+            let context = database.mainContext
+            let bench = try exercise("Bench", in: context)
+            let previous = WorkoutSession()
+            previous.addExercise(bench)
+            previous.exercises[0].sets[0].weightText = "175"
+            previous.exercises[0].sets[0].repsText = "8"
+            _ = try WorkoutService().save(session: previous, in: context)
+
+            let session = WorkoutSession.restore(in: context, store: store)
+            session.addExercise(bench)
+            session.exercises[0].sets[0].weightText = "185"
+            session.exercises[0].sets[0].repsText = "6"
+            let restored = WorkoutSession.restore(in: context, store: store)
+            let exercise = try XCTUnwrap(restored.exercises.first)
+            XCTAssertEqual(exercise.sets[0].weightText, "185")
+            XCTAssertEqual(exercise.sets[0].repsText, "6")
+            XCTAssertEqual(exercise.previousSets.first?.weight, 175)
+            XCTAssertEqual(exercise.previousSets.first?.reps, 8)
+            XCTAssertEqual(try context.fetch(FetchDescriptor<Workout>()).count, 1)
+        }
+    }
+
+    func testUnreadableSnapshotIsNotOverwrittenDuringLaunch() async throws {
+        try withStore { directory, store in
+            let database = try container(at: directory)
+            let invalidData = Data("invalid JSON".utf8)
+            try invalidData.write(to: store.fileURL)
+            let restored = WorkoutSession.restore(in: database.mainContext, store: store)
+            XCTAssertTrue(restored.isEmpty)
+            XCTAssertEqual(try Data(contentsOf: store.fileURL), invalidData)
+        }
+    }
 }
