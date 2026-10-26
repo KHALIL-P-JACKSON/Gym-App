@@ -1,3 +1,5 @@
+import SwiftUI
+
 /// Sheet for creating a custom exercise (name + muscle group).
 struct CustomExerciseSheet: View {
     var onSave: (String, MuscleGroup) -> Void
