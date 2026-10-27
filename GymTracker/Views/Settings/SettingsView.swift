@@ -3,6 +3,7 @@ import SwiftData
 
 /// Minimal v1 Settings: units, appearance, workout prefs, data + about.
 struct SettingsView: View {
+    var onDataDeleted: () -> Void = {}
     @Environment(\.modelContext) private var context
     @Query private var workouts: [Workout]
     @Query private var allSets: [WorkoutSet]
@@ -107,7 +108,7 @@ struct SettingsView: View {
                 Button("Delete All Data", role: .destructive) { deleteAll() }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("All workouts, plans and custom exercises will be removed. This cannot be undone.")
+                Text("All workouts, the active workout draft, plans and custom exercises will be removed. This cannot be undone.")
             }
             .alert(deleteAlertTitle, isPresented: $showDeleteResult) {
                 Button("OK", role: .cancel) {}
@@ -133,7 +134,7 @@ struct SettingsView: View {
     }
 
     private var deleteAlertMessage: String {
-        deleteError ?? "All workouts, plans and custom exercises were removed."
+        deleteError ?? "All workouts, the active workout draft, plans and custom exercises were removed."
     }
 
     private func exportCSV() {
@@ -153,6 +154,7 @@ struct SettingsView: View {
     private func deleteAll() {
         do {
             try DataManager.deleteAllData(in: context)
+            onDataDeleted()
             deleteError = nil
         } catch {
             deleteError = error.localizedDescription
