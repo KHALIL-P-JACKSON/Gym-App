@@ -1,11 +1,10 @@
 import SwiftUI
 
 /// Root tab bar: Home, Workout, Plan, History, Progress, Settings.
-/// Owns the shared workout session so the Plan tab can load a full
-/// split into the Workout tab all at once.
+/// Shares the app's restored workout session with the Workout and Plan tabs.
 struct MainTabView: View {
     @State private var selectedTab = 0
-    @State private var session = WorkoutSession()
+    @Bindable var session: WorkoutSession
     // Observes the appearance setting so the theme updates live.
     @AppStorage("settings.appearance") private var appearanceRaw = AppearanceSetting.system.rawValue
 
@@ -31,7 +30,7 @@ struct MainTabView: View {
                 .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(4)
 
-            SettingsView()
+            SettingsView(onDataDeleted: { session.reset() })
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
                 .tag(5)
         }
@@ -40,6 +39,6 @@ struct MainTabView: View {
 }
 
 #Preview {
-    MainTabView()
+    MainTabView(session: WorkoutSession())
         .modelContainer(PreviewData.container)
 }
