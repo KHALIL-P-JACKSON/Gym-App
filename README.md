@@ -15,7 +15,7 @@ A modern, native iPhone workout tracker built with **SwiftUI**, **SwiftData** an
 3. Press **Run** (⌘R). The preset exercise library is seeded automatically on first launch.
 4. You can use your own code signing team later — for the simulator, none is needed.
 
-> Everything is stored locally in the app's SwiftData store. Wi-Fi and cellular are never required.
+> Completed workouts are stored locally in the app's SwiftData store. Wi-Fi and cellular are never required.
 
 ## Primary workflow
 
@@ -52,7 +52,7 @@ GymTracker/
 │                   PreviewData (previews only)
 ├── Services/       WorkoutService (saving / previous performance),
 │                   ProgressCalculator (best lifts, estimated 1RM, streaks, history),
-│                   WorkoutSession (in-memory draft of the workout being logged),
+│                   WorkoutSession + WorkoutDraftStore (autosaved active workout draft),
 │                   PlanStore (preset/custom plan persistence)
 ├── Views/          MainTabView, Home/, Workout/, Plan/, History/, Progress/
 ├── Components/     StatCard, SetRow, EmptyStateView, ExerciseGroupList
@@ -96,3 +96,26 @@ Uses the **Epley formula**: `weight × (1 + reps / 30)`. It is always labeled as
 ## Roadmap hooks (not implemented yet)
 
 The architecture leaves room for: iCloud sync (SwiftData's CloudKit support), HealthKit integration (HKWorkout data is derivable from `Workout`), exercise search/custom exercises, workout templates (Push/Pull/Legs from the stored `category`), rest timers, personal records, bodyweight/measurement tracking, CSV export, and richer Progress calculations — all without restructuring the models or services.
+
+## Active workout recovery
+
+The active Workout tab autosaves selected exercises, workout name/date, weight
+and rep text (including partial entries), set order, and completed exercise cards
+to a separate local draft file after every edit. Reopening the app restores that
+draft, even after a long gap. Finish Workout clears the draft after saving the
+completed workout to History. One-off past-workout editors in History remain
+separate from the active draft.
+
+Manual checks:
+
+- Load a plan, rename it, enter sets and a partial row, and Complete one exercise.
+  Swipe the app away, relaunch, then open Workout: all entries and locks return.
+- Edit a restored draft, add/remove sets and exercises, and swipe away again:
+  the latest changes return. Repeat after a long gap.
+- Finish a restored workout, then relaunch: History has the completed workout
+  and Workout starts fresh.
+
+On macOS 14 or later with Xcode 16 or later selected, run `swift test` from the
+repository root for the persistence regression tests. They reopen both stores,
+check partial entries, ordering and locks, verify edits after restoration, and
+check that finishing clears the draft while retaining workout history.

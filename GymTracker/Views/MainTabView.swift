@@ -1,11 +1,10 @@
 import SwiftUI
 
 /// Root tab bar: Home, Workout, Plan, History, Progress.
-/// Owns the shared workout session so the Plan tab can load a full
-/// split into the Workout tab all at once.
+/// Shares the app's restored workout session with the Workout and Plan tabs.
 struct MainTabView: View {
     @State private var selectedTab = 0
-    @State private var session = WorkoutSession()
+    @Bindable var session: WorkoutSession
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -33,6 +32,6 @@ struct MainTabView: View {
 }
 
 #Preview {
-    MainTabView()
+    MainTabView(session: WorkoutSession())
         .modelContainer(PreviewData.container)
 }
